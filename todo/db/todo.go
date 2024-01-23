@@ -27,7 +27,14 @@ type DbMap map[int]ToDoItem
 //	   	 (they are lowercase).  Describe why you think this is
 //		 a good design decision.
 //
-// ANSWER: <GOES HERE>
+// ANSWER:
+//   I believe that this is a good decision because of the
+//   open/close principle. The struct should not be open for
+//   modification else were in the code and should only be
+//   extened upon. This will ensure that the code works as
+//   it should as modifying it can break the entirety of the
+//   code or modification midway through the code doesnt happen.
+
 type ToDo struct {
 	toDoMap    DbMap
 	dbFileName string

@@ -60,9 +60,9 @@ const (
 //	 YOUR ANSWER:
 // 								The function processCmdLineFlags's main responsibility
 // 								is to set this program's parameter or passed arguments
-// 								before running. It's the first thing is called before
+// 								before running. It's the first thing to be called before
 //								anything else in the code as it is placed right at the
-//								very beginning of main(). Following it, if there is an
+//								very beginning of main(). If there are no flags set
 //								error it will print out what the error message is and exit.
 //
 //								The flag package allows the program ability to have parameters
