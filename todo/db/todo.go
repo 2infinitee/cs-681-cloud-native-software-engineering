@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"log"
 	"os"
 )
 
@@ -109,9 +111,46 @@ func (t *ToDo) RestoreDB() error {
 	//				defer srcFile.Close()
 
 	// TODO: Implement this function
-	fmt.Println("RestoreDB() is not implemented")
-	fmt.Println("DB File:", dbFileName)
-	fmt.Println("Backup DB File:", backupFileName)
+
+	// check to see if the .bak file exists
+	sourceFile, err := os.Open(backupFileName)
+
+	// sourceFile has an error log it, if not continue
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// close the file after code has been completed
+	defer sourceFile.Close()
+
+	destinationFile, err := os.Create(dbFileName)
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	defer destinationFile.Close()
+
+	// a buffer is needed to read from the file to memory
+	bufferReader := make([]byte, 128)
+
+	// for loop to allow iteration over
+	for {
+
+		// read from the source file
+		content, err := sourceFile.Read(bufferReader)
+		if err != nil && err != io.EOF {
+			return err
+		}
+
+		if content == 0 {
+			break
+		}
+
+		if _, err := destinationFile.Write(bufferReader[:content]); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
