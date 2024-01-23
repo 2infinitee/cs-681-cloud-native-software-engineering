@@ -184,7 +184,27 @@ func (t *ToDo) AddItem(item ToDoItem) error {
 	//at the end to indicate that the item was properly added to the
 	//database.
 
-	return errors.New("AddItem() is currently not implemented")
+	fileName := t.dbFileName
+
+	sourceFile, err := os.Open(fileName)
+	if err != nil {
+		return err
+	}
+	defer sourceFile.Close()
+
+	sourceFileBytes, _ := io.ReadAll(sourceFile)
+
+	data := json.Unmarshal(sourceFileBytes, &sourceFile)
+
+	fmt.Println("hehe ", data)
+
+	for i := 0; i < len(t.toDoMap); i++ {
+
+		fmt.Println(t.GetItem(item.Id))
+	}
+
+	return nil
+	// return errors.New("AddItem() is currently not implemented new")
 }
 
 // DeleteItem accepts an item id and removes it from the DB.

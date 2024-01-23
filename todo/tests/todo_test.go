@@ -14,7 +14,6 @@ import (
 	"testing"
 
 	"drexel.edu/todo/db"
-	"github.com/CNSE-Class-Demo-Files/todo-api-w-events/db"
 	fake "github.com/brianvoe/gofakeit/v6" //aliasing package name
 	"github.com/stretchr/testify/assert"
 )
@@ -74,12 +73,15 @@ func TestAddHardCodedItem(t *testing.T) {
 	//I will get you started, uncomment the lines below to add to the DB
 	//and ensure no errors:
 	//---------------------------------------------------------------
-	// err := DB.AddItem(item)
-	// assert.NoError(t, err, "Error adding item to DB")
+	err := DB.AddItem(item)
+	assert.NoError(t, err, "Error adding item to DB")
 
 	//TODO: Now finish the test case by looking up the item in the DB
 	//and making sure it matches the item that you put in the DB above
 
+	assert.Equal(t, 999, item.Id, "item.Id did not match with expected value.")
+	assert.Equal(t, "This is a test case item", item.Title, "item.Title did not match with expected value.")
+	assert.Equal(t, false, item.IsDone, "item.IsDone did not match with expected value.")
 }
 
 func TestAddRandomStructItem(t *testing.T) {
@@ -109,7 +111,3 @@ func TestAddRandomItem(t *testing.T) {
 //TODO: Create additional tests to showcase the correct operation of your program
 //for example getting an item, getting all items, updating items, and so on. Be
 //creative here.
-
-func TestDatabaseRestore(t *testing.T) {
-	restoreDb, err := db.
-}
