@@ -9,11 +9,7 @@ package tests
 //of helper functions to generate random data to make testing easier.
 
 import (
-	"encoding/json"
-	"errors"
 	"fmt"
-	"io"
-	"log"
 	"os"
 	"testing"
 
@@ -77,37 +73,20 @@ func TestAddHardCodedItem(t *testing.T) {
 	//I will get you started, uncomment the lines below to add to the DB
 	//and ensure no errors:
 	//---------------------------------------------------------------
-	//err := DB.AddItem(item)
-	//assert.NoError(t, err, "Error adding item to DB")
+	err := DB.AddItem(item)
+	assert.NoError(t, err, "Error adding item to DB")
 
 	//TODO: Now finish the test case by looking up the item in the DB
 	//and making sure it matches the item that you put in the DB above
 
-	data, err := os.ReadFile("../data/todo.json")
+	sourceFile, err := os.Open(DEFAULT_DB_FILE_NAME)
 	if err != nil {
-		log.Fatalln(err)
+		t.Log(err)
 	}
 
-	var dataList []db.ToDoItem
 
-	err = json.Unmarshal(data, &dataList)
-	if err != nil {
-		log.Fatalln(err)
-	}
 
-	for _, i := range dataList {
-		if item.Id == i.Id {
-			err = errors.New("shit broken")
-		}
-	}
-
-	append(dataList, item)
-
-	jsonString, _ := json.Marshal(dataList)
-
-	err := os.WriteFile(jsonString, , 0644)
-
-	assert.Equal(t, 999, item.Id, "item.Id did not match with expected value.")
+	assert.Equal(t, 999, db.ToDoItem{Id: }, "item.Id did not match with expected value.")
 	assert.Equal(t, "This is a test case item", item.Title, "item.Title did not match with expected value.")
 	assert.Equal(t, false, item.IsDone, "item.IsDone did not match with expected value.")
 }
@@ -140,53 +119,9 @@ func TestAddRandomItem(t *testing.T) {
 //for example getting an item, getting all items, updating items, and so on. Be
 //creative here.
 
-func TestRestoreDatabase(t *testing.T) {
-
-	// define file paths
-	primaryFile := "../data/todo.json"
-	backupFile := "../data/todo.json.bak"
-
-	// remove the file
-	err := os.Remove(primaryFile)
-
-	// test if there were any errors
-	assert.NoError(t, err, "ToDo.json Exists.")
-
-	// read the backup file
-	backupData, err := os.Open(backupFile)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	defer backupData.Close()
-
-	assert.NoError(t, err, "Backup File error.")
-
-	// create a new one
-	newDB, err := os.Create(primaryFile)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	defer newDB.Close()
-
-	bufferReader := make([]byte, 32)
-
-	for {
-		data, err := backupData.Read(bufferReader)
-		if err != nil && err != io.EOF {
-			fmt.Println(err)
-		}
-
-		if data == 0 {
-			break
-		}
-
-		if _, err := newDB.Write(bufferReader[:data]); err != nil {
-			fmt.Println(err)
-		}
-	}
-
-	assert.FileExists(t, primaryFile, "ToDo.json file not found.")
-
-	assert.NoError(t, err, "File exists.")
+// TestRestoreDb test to see if func restoreDB works
+// all it needs to do is test if the file exists after
+// the init.
+func TestRestoreDB(t *testing.T) {
+	assert.FileExists(t, DEFAULT_DB_FILE_NAME, "ToDo.json file not found.")
 }

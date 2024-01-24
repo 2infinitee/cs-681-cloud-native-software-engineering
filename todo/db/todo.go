@@ -31,10 +31,10 @@ type DbMap map[int]ToDoItem
 // ANSWER:
 //   I believe that this is a good decision because of the
 //   open/close principle. The struct should not be open for
-//   modification else were in the code and should only be
-//   extened upon. This will ensure that the code works as
-//   it should as modifying it can break the entirety of the
-//   code or modification midway through the code doesnt happen.
+//   modification else where and outside of the package and should
+//   only be extend upon. This will ensure that the code works as
+//   it should, modifying it can break the entirety of the
+//   package as it becomes less protected.
 
 type ToDo struct {
 	toDoMap    DbMap
@@ -111,19 +111,19 @@ func (t *ToDo) RestoreDB() error {
 
 	// TODO: Implement this function
 
-	// check to see if the .bak file exists
-	sourceFile, err := os.Open(backupFileName)
+	// open the file but check to see if the .bak file exists
+	backupFile, err := os.Open(backupFileName)
 
-	// sourceFile has an error log it, if not continue
+	// backupFile has an error log it, if not continue
 	if err != nil {
 		return err
 	}
 
-	// close the file after code has been completed
-	defer sourceFile.Close()
+	// close the file after func has been completed
+	defer backupFile.Close()
 
-	// create a new filename or overwrite existing file? truncated
-	destinationFile, err := os.Create(dbFileName)
+	// create a new filename or overwrite
+	restoredFile, err := os.Create(dbFileName)
 
 	// destination file fails to create throw an error
 	if err != nil {
@@ -131,33 +131,34 @@ func (t *ToDo) RestoreDB() error {
 	}
 
 	// close the destination file
-	defer destinationFile.Close()
+	defer restoredFile.Close()
 
 	// a buffer is needed to read from the file to memory
-	bufferReader := make([]byte, 1024)
+	bufferReader := make([]byte, 8)
 
-	// for loop to allow iteration over
+	// for loop to allow iteration
 	for {
 
-		// read from the source file
-		lines, err := sourceFile.Read(bufferReader)
+		// read data backup file data
+		data, err := backupFile.Read(bufferReader)
+
+		// error out if error or EOF is found
 		if err != nil && err != io.EOF {
 			return err
 		}
 
-		if lines == 0 {
+		// break out of the for loop once data is 0
+		if data == 0 {
 			break
 		}
 
-		fmt.Println("copy over line :", string(bufferReader[:lines]))
-
-		if _, err := destinationFile.Write(bufferReader[:lines]); err != nil {
+		// write back up to new file
+		if _, err := restoredFile.Write(bufferReader[:data]); err != nil {
 			return err
 		}
-
 	}
 
-	return nil
+	return err
 }
 
 //------------------------------------------------------------
@@ -193,25 +194,38 @@ func (t *ToDo) AddItem(item ToDoItem) error {
 	// set database file name
 	fileName := t.dbFileName
 
+	// read the file's content and return bytes
 	data, err := os.ReadFile(fileName)
 	if err != nil {
 		return err
 	}
 
-	var listOfThings []ToDoItem
+	// setup a variable for the structure in memory
+	var todoContents []ToDoItem
 
-	err = json.Unmarshal(data, &listOfThings)
-
-	for _, item := range listOfThings {
-		if t.toDoMap[item.Id] == item {
-			break
-		}
-		t.toDoMap[item.Id] = item
+	// unmarshal turns encoded data to be readable
+	err = json.Unmarshal(data, &todoContents)
+	if err != nil {
+		return err
 	}
 
-	// checker to see if item exists in the database already
+	// check to see if
+	for _, i := range todoContents {
+		if i.Id == item.Id {
+			err = errors.New("item not added, found matching todoItem.Id")
+		}
+	}
 
-	return errors.New("AddItem() is currently not implemented new")
+	todoContents = append(todoContents, item)
+
+	jsonAdd, _ := json.MarshalIndent(fileName, "", "\t")
+
+	err = os.WriteFile(fileName, jsonAdd, os.ModeAppend)
+	if err != nil {
+		return err
+	}
+
+	return err
 }
 
 // DeleteItem accepts an item id and removes it from the DB.
@@ -239,6 +253,28 @@ func (t *ToDo) DeleteItem(id int) error {
 	//appropriate.  If everything there are no errors, this function should
 	//return nil at the end to indicate that the item was properly deleted
 	//from the database.
+
+	fileName := t.dbFileName
+
+	data, err := os.ReadFile(fileName)
+	if err != nil {
+		return err
+	}
+
+	var todoContents []ToDoItem
+
+	err = json.Unmarshal(data, &todoContents)
+	if err != nil {
+		return err
+	}
+
+	for _, item := range todoContents {
+		var jsonData interface{}
+		if m, ok := jsonData.(map[int]interface{}); ok {
+			delete(m, id)
+		}
+
+	}
 
 	return errors.New("DeleteItem() is currently not implemented")
 }
