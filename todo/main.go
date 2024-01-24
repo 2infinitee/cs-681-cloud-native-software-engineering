@@ -72,15 +72,15 @@ const (
 //								represent it, a default value, and a description of its usage.
 //
 //								For example, the command `kubectl` by itself isn't useful
-//                if called by itself. The behavior that it will return
+//                				if called by itself. The behavior that it will return
 //								by not passing a parameter or arguement is a help message
-//                that prints an explanation of how to properly use the
-//                command with sub-commands their optional parameters.
+//                				that prints an explanation of how to properly use the
+//                				command with sub-commands their optional parameters.
 //								What triggers the explanation of usage is the flag.Usage()
-//                function.
+//                				function.
 //
-//                However, if a parameter(s) was set to this program. The
-//    						processCmdLineFlags function will go through and set all
+//                				However, if a parameter(s) was set to this program. The
+//    							processCmdLineFlags function will go through and set all
 //								of the global variables, run through a switch case finding
 //								which parameters were set and trigger the appropriate
 //								functions.

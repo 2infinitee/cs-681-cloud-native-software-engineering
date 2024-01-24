@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"os"
 )
 
@@ -117,40 +116,47 @@ func (t *ToDo) RestoreDB() error {
 
 	// sourceFile has an error log it, if not continue
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 
 	// close the file after code has been completed
 	defer sourceFile.Close()
 
+	// create a new filename or overwrite existing file? truncated
 	destinationFile, err := os.Create(dbFileName)
 
+	// destination file fails to create throw an error
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 
+	// close the destination file
 	defer destinationFile.Close()
 
 	// a buffer is needed to read from the file to memory
-	bufferReader := make([]byte, 128)
+	bufferReader := make([]byte, 1024)
 
 	// for loop to allow iteration over
 	for {
 
 		// read from the source file
-		content, err := sourceFile.Read(bufferReader)
+		lines, err := sourceFile.Read(bufferReader)
 		if err != nil && err != io.EOF {
 			return err
 		}
 
-		if content == 0 {
+		if lines == 0 {
 			break
 		}
 
-		if _, err := destinationFile.Write(bufferReader[:content]); err != nil {
+		fmt.Println("copy over line :", string(bufferReader[:lines]))
+
+		if _, err := destinationFile.Write(bufferReader[:lines]); err != nil {
 			return err
 		}
+
 	}
+
 	return nil
 }
 
@@ -184,27 +190,28 @@ func (t *ToDo) AddItem(item ToDoItem) error {
 	//at the end to indicate that the item was properly added to the
 	//database.
 
+	// set database file name
 	fileName := t.dbFileName
 
-	sourceFile, err := os.Open(fileName)
+	data, err := os.ReadFile(fileName)
 	if err != nil {
 		return err
 	}
-	defer sourceFile.Close()
 
-	sourceFileBytes, _ := io.ReadAll(sourceFile)
+	var listOfThings []ToDoItem
 
-	data := json.Unmarshal(sourceFileBytes, &sourceFile)
+	err = json.Unmarshal(data, &listOfThings)
 
-	fmt.Println("hehe ", data)
-
-	for i := 0; i < len(t.toDoMap); i++ {
-
-		fmt.Println(t.GetItem(item.Id))
+	for _, item := range listOfThings {
+		if t.toDoMap[item.Id] == item {
+			break
+		}
+		t.toDoMap[item.Id] = item
 	}
 
-	return nil
-	// return errors.New("AddItem() is currently not implemented new")
+	// checker to see if item exists in the database already
+
+	return errors.New("AddItem() is currently not implemented new")
 }
 
 // DeleteItem accepts an item id and removes it from the DB.
