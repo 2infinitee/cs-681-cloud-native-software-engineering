@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"os"
 )
 
@@ -212,13 +213,14 @@ func (t *ToDo) AddItem(item ToDoItem) error {
 	// check to see if
 	for _, i := range todoContents {
 		if i.Id == item.Id {
-			err = errors.New("item not added, found matching todoItem.Id")
+			err = errors.New("found matching item.Id in todo.json")
+			log.Fatalln(err, item.Id)
 		}
 	}
 
 	todoContents = append(todoContents, item)
 
-	jsonAdd, _ := json.MarshalIndent(fileName, "", "\t")
+	jsonAdd, _ := json.MarshalIndent(todoContents, "", "\t")
 
 	err = os.WriteFile(fileName, jsonAdd, os.ModeAppend)
 	if err != nil {
@@ -268,15 +270,22 @@ func (t *ToDo) DeleteItem(id int) error {
 		return err
 	}
 
-	for _, item := range todoContents {
-		var jsonData interface{}
-		if m, ok := jsonData.(map[int]interface{}); ok {
-			delete(m, id)
-		}
+	dataSize := len(data)
 
+	for i := 0; i <= dataSize; i++ {
+		if todoContents[i].Id == id {
+			todoContents = append(todoContents[:i], todoContents[i+1:]...)
+			break
+		}
 	}
 
-	return errors.New("DeleteItem() is currently not implemented")
+	jsonAdd, _ := json.MarshalIndent(todoContents, "", "\t")
+	err = os.WriteFile(fileName, jsonAdd, os.ModeAppend)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // UpdateItem accepts a ToDoItem and updates it in the DB.
@@ -359,6 +368,18 @@ func (t *ToDo) GetAllItems() ([]ToDoItem, error) {
 	//use the built in append() function in go to add an item in a slice.
 	//Finally, if there were no errors along the way, return the slice
 	//and nil as the error value.
+
+	fileName := t.dbFileName
+	var fileContents []ToDoItem
+
+	data, err := os.ReadFile(fileName)
+	if err != nil {
+		return nil, err
+	}
+
+	jsonData := json.Unmarshal(data, &fileContents)
+
+	fmt.Println(jsonData)
 
 	return nil, errors.New("GetAllItems() is currently not implemented")
 }

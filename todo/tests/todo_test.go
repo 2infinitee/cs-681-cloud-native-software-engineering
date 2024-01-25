@@ -9,6 +9,8 @@ package tests
 //of helper functions to generate random data to make testing easier.
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"testing"
@@ -24,7 +26,8 @@ import (
 // then go into the /data directory.  Thus this is why we are setting the
 // default file name to "../data/todo.json"
 const (
-	DEFAULT_DB_FILE_NAME = "../data/todo.json"
+	DEFAULT_DB_FILE_NAME        = "../data/todo.json"
+	DEFAULT_DB_BACKUP_FILE_NAME = "../data/todo.json.bak"
 )
 
 var (
@@ -79,16 +82,31 @@ func TestAddHardCodedItem(t *testing.T) {
 	//TODO: Now finish the test case by looking up the item in the DB
 	//and making sure it matches the item that you put in the DB above
 
-	sourceFile, err := os.Open(DEFAULT_DB_FILE_NAME)
+	sourceFile, err := os.ReadFile(DEFAULT_DB_FILE_NAME)
 	if err != nil {
 		t.Log(err)
 	}
 
+	var fileContents []db.ToDoItem
 
+	err = json.Unmarshal(sourceFile, &fileContents)
+	if err != nil {
+		t.Log(err)
+	}
 
-	assert.Equal(t, 999, db.ToDoItem{Id: }, "item.Id did not match with expected value.")
-	assert.Equal(t, "This is a test case item", item.Title, "item.Title did not match with expected value.")
-	assert.Equal(t, false, item.IsDone, "item.IsDone did not match with expected value.")
+	jsonItem := 0
+
+	for i := 0; i < len(fileContents); i++ {
+		if fileContents[i] == item {
+			jsonItem = i
+			break
+		}
+		if i == len(fileContents) {
+			err = errors.New("did not find item")
+		}
+	}
+
+	assert.Equal(t, item, fileContents[jsonItem], "found added item.id")
 }
 
 func TestAddRandomStructItem(t *testing.T) {
@@ -119,9 +137,42 @@ func TestAddRandomItem(t *testing.T) {
 //for example getting an item, getting all items, updating items, and so on. Be
 //creative here.
 
-// TestRestoreDb test to see if func restoreDB works
-// all it needs to do is test if the file exists after
-// the init.
+// RestoreDB func test
 func TestRestoreDB(t *testing.T) {
-	assert.FileExists(t, DEFAULT_DB_FILE_NAME, "ToDo.json file not found.")
+
+	assert.FileExists(t, DEFAULT_DB_BACKUP_FILE_NAME, "todo.json.back file in ../data does not exist")
+
+	// remove the current db
+	err := os.Remove(DEFAULT_DB_FILE_NAME)
+	assert.NoError(t, err, "Found error while removing file in TestRestoreDB")
+	assert.NoFileExists(t, DEFAULT_DB_FILE_NAME, "todo.json file in ../data exist")
+
+	// use the restoreDB function and see if the file was created
+	err = DB.RestoreDB()
+	assert.NoError(t, err, "Found error while running RestoreDB in TestRestoreDB")
+	dafdfassert.FileExists(t, DEFAULT_DB_FILE_NAME, "todo.json file in ../data does not exist")
+}
+
+func TestGetAllItems(t *testing.T) {
+	items, err := DB.GetAllItems()
+	assert.NoError(t, err, "Found error while running TestGetAllItems")
+	assert.Equal(t, 1, items, "something")
+}
+
+func TestDeleteItem(t *testing.T) {
+
+	// test to see if item.id exists first
+	err := DB.DeleteItem(21)
+	assert.Error(t, err, "Did not return the correct err in TestDeleteItem")
+
+	// add a new item.id
+	item := db.ToDoItem{
+		Id:     21,
+		Title:  "try something new",
+		IsDone: false,
+	}
+	err = DB.AddItem(item)
+	assert.NoError(t, err, "Found error while running TestAddItem")
+
+	// delete newly created item.id
 }
