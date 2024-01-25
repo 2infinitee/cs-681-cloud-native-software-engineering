@@ -5,8 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"os"
+)
+
+var (
+	fileContents []ToDoItem
 )
 
 // ToDoItem is the struct that represents a single ToDo item
@@ -213,8 +216,7 @@ func (t *ToDo) AddItem(item ToDoItem) error {
 	// check to see if
 	for _, i := range todoContents {
 		if i.Id == item.Id {
-			err = errors.New("found matching item.Id in todo.json")
-			log.Fatalln(err, item.Id)
+			return errors.New("found matching item.Id in todo.json")
 		}
 	}
 
@@ -227,7 +229,7 @@ func (t *ToDo) AddItem(item ToDoItem) error {
 		return err
 	}
 
-	return err
+	return nil
 }
 
 // DeleteItem accepts an item id and removes it from the DB.
@@ -270,19 +272,27 @@ func (t *ToDo) DeleteItem(id int) error {
 		return err
 	}
 
-	dataSize := len(data)
+	n := 0
+	itemDeleted := false
 
-	for i := 0; i <= dataSize; i++ {
-		if todoContents[i].Id == id {
-			todoContents = append(todoContents[:i], todoContents[i+1:]...)
+	for _, i := range todoContents {
+		if i.Id == id {
+			itemDeleted = true
+			todoContents = append(todoContents[:n], todoContents[n+1:]...)
 			break
 		}
+		n++
 	}
 
-	jsonAdd, _ := json.MarshalIndent(todoContents, "", "\t")
-	err = os.WriteFile(fileName, jsonAdd, os.ModeAppend)
-	if err != nil {
-		return err
+	if itemDeleted == true {
+		jsonAdd, _ := json.MarshalIndent(todoContents, "", "\t")
+		err = os.WriteFile(fileName, jsonAdd, os.ModeAppend)
+		if err != nil {
+			return err
+		}
+	}
+	if itemDeleted == false {
+		return errors.New("could not delete Id, it does not exist in database")
 	}
 
 	return nil
@@ -369,19 +379,14 @@ func (t *ToDo) GetAllItems() ([]ToDoItem, error) {
 	//Finally, if there were no errors along the way, return the slice
 	//and nil as the error value.
 
-	fileName := t.dbFileName
-	var fileContents []ToDoItem
+	data, err := openFile(t.dbFileName)
 
-	data, err := os.ReadFile(fileName)
+	err = json.Unmarshal(data, &fileContents)
 	if err != nil {
 		return nil, err
 	}
+	return fileContents, err
 
-	jsonData := json.Unmarshal(data, &fileContents)
-
-	fmt.Println(jsonData)
-
-	return nil, errors.New("GetAllItems() is currently not implemented")
 }
 
 // PrintItem accepts a ToDoItem and prints it to the console
@@ -522,4 +527,12 @@ func (t *ToDo) loadDB() error {
 	}
 
 	return nil
+}
+
+func openFile(fileName string) ([]byte, error) {
+	data, err := os.ReadFile(fileName)
+	if err != nil {
+		return nil, err
+	}
+	return data, err
 }

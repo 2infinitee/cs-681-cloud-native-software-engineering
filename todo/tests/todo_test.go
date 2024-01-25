@@ -150,20 +150,16 @@ func TestRestoreDB(t *testing.T) {
 	// use the restoreDB function and see if the file was created
 	err = DB.RestoreDB()
 	assert.NoError(t, err, "Found error while running RestoreDB in TestRestoreDB")
-	dafdfassert.FileExists(t, DEFAULT_DB_FILE_NAME, "todo.json file in ../data does not exist")
+	assert.FileExists(t, DEFAULT_DB_FILE_NAME, "todo.json file in ../data does not exist")
 }
 
 func TestGetAllItems(t *testing.T) {
 	items, err := DB.GetAllItems()
 	assert.NoError(t, err, "Found error while running TestGetAllItems")
-	assert.Equal(t, 1, items, "something")
+	fmt.Println(items)
 }
 
 func TestDeleteItem(t *testing.T) {
-
-	// test to see if item.id exists first
-	err := DB.DeleteItem(21)
-	assert.Error(t, err, "Did not return the correct err in TestDeleteItem")
 
 	// add a new item.id
 	item := db.ToDoItem{
@@ -171,8 +167,14 @@ func TestDeleteItem(t *testing.T) {
 		Title:  "try something new",
 		IsDone: false,
 	}
-	err = DB.AddItem(item)
+	err := DB.AddItem(item)
 	assert.NoError(t, err, "Found error while running TestAddItem")
 
 	// delete newly created item.id
+	err = DB.DeleteItem(21)
+	assert.NoError(t, err, "The func DeleteItem returned a error")
+
+	// test to see if item.id exists
+	err = DB.DeleteItem(21)
+	assert.Error(t, err, "Did not pass because TestDeleteItem Id should return error")
 }
