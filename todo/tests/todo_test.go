@@ -10,7 +10,6 @@ package tests
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	"testing"
@@ -82,31 +81,32 @@ func TestAddHardCodedItem(t *testing.T) {
 	//TODO: Now finish the test case by looking up the item in the DB
 	//and making sure it matches the item that you put in the DB above
 
-	sourceFile, err := os.ReadFile(DEFAULT_DB_FILE_NAME)
-	if err != nil {
-		t.Log(err)
-	}
+	//sourceFile, err := os.ReadFile(DEFAULT_DB_FILE_NAME)
+	//if err != nil {
+	//	t.Log(err)
+	//}
+	//
+	//var fileContents []db.ToDoItem
+	//
+	//err = json.Unmarshal(sourceFile, &fileContents)
+	//if err != nil {
+	//	t.Log(err)
+	//}
+	//
+	//jsonItem := 0
+	//
+	//for i := 0; i < len(fileContents); i++ {
+	//	if fileContents[i] == item {
+	//		jsonItem = i
+	//		break
+	//	}
+	//	if i == len(fileContents) {
+	//		err = errors.New("did not find item")
+	//	}
+	//}
 
-	var fileContents []db.ToDoItem
-
-	err = json.Unmarshal(sourceFile, &fileContents)
-	if err != nil {
-		t.Log(err)
-	}
-
-	jsonItem := 0
-
-	for i := 0; i < len(fileContents); i++ {
-		if fileContents[i] == item {
-			jsonItem = i
-			break
-		}
-		if i == len(fileContents) {
-			err = errors.New("did not find item")
-		}
-	}
-
-	assert.Equal(t, item, fileContents[jsonItem], "found added item.id")
+	fileContents, _ := DB.GetItem(item.Id)
+	assert.Equal(t, item, fileContents, "found added item.id")
 }
 
 func TestAddRandomStructItem(t *testing.T) {
@@ -155,8 +155,12 @@ func TestRestoreDB(t *testing.T) {
 
 func TestGetAllItems(t *testing.T) {
 	items, err := DB.GetAllItems()
+	var fileContents []db.ToDoItem
+	data, _ := os.ReadFile(DEFAULT_DB_BACKUP_FILE_NAME)
+	err = json.Unmarshal(data, &fileContents)
+
 	assert.NoError(t, err, "Found error while running TestGetAllItems")
-	fmt.Println(items)
+	assert.Equal(t, fileContents, items, "Did not find expected value.")
 }
 
 func TestDeleteItem(t *testing.T) {
@@ -177,4 +181,18 @@ func TestDeleteItem(t *testing.T) {
 	// test to see if item.id exists
 	err = DB.DeleteItem(21)
 	assert.Error(t, err, "Did not pass because TestDeleteItem Id should return error")
+}
+
+func TestGetItem(t *testing.T) {
+
+	// test a actual existing id
+	id := 1
+	data, err := DB.GetItem(id)
+	assert.NoError(t, err, "Ran into error when running GetItem func")
+	assert.Equal(t, id, data.Id, " Did not find matching ID during GetItem Run")
+
+	// test a non-existing id, error should return as error
+	id = 10
+	_, err = DB.GetItem(id)
+	assert.Error(t, err, "Ran into nil when running GetItem func")
 }

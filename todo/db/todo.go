@@ -8,10 +8,6 @@ import (
 	"os"
 )
 
-var (
-	fileContents []ToDoItem
-)
-
 // ToDoItem is the struct that represents a single ToDo item
 type ToDoItem struct {
 	Id     int    `json:"id"`
@@ -354,7 +350,32 @@ func (t *ToDo) GetItem(id int) (ToDoItem, error) {
 	//as the error value the end to indicate that the item was
 	//properly returned from the database.
 
-	return ToDoItem{}, errors.New("GetItem() is currently not implemented")
+	fileName := t.dbFileName
+	var fileContents []ToDoItem
+
+	data, err := os.ReadFile(fileName)
+	if err != nil {
+		return ToDoItem{}, err
+	}
+
+	err = json.Unmarshal(data, &fileContents)
+	if err != nil {
+		return ToDoItem{}, err
+	}
+
+	var idx int
+
+	for i := 0; i < len(fileContents); i++ {
+		if fileContents[i].Id == id {
+			idx = i
+			break
+		}
+		if i == len(fileContents)-1 {
+			return ToDoItem{}, errors.New("did not find id in database")
+		}
+	}
+
+	return fileContents[idx], nil
 }
 
 // GetAllItems returns all items from the DB.  If successful it
@@ -379,14 +400,20 @@ func (t *ToDo) GetAllItems() ([]ToDoItem, error) {
 	//Finally, if there were no errors along the way, return the slice
 	//and nil as the error value.
 
-	data, err := openFile(t.dbFileName)
+	fileName := t.dbFileName
+	var fileContents []ToDoItem
+
+	data, err := os.ReadFile(fileName)
+	if err != nil {
+		return fileContents, err
+	}
 
 	err = json.Unmarshal(data, &fileContents)
 	if err != nil {
-		return nil, err
+		return fileContents, err
 	}
-	return fileContents, err
 
+	return fileContents, nil
 }
 
 // PrintItem accepts a ToDoItem and prints it to the console
@@ -527,12 +554,4 @@ func (t *ToDo) loadDB() error {
 	}
 
 	return nil
-}
-
-func openFile(fileName string) ([]byte, error) {
-	data, err := os.ReadFile(fileName)
-	if err != nil {
-		return nil, err
-	}
-	return data, err
 }
