@@ -12,7 +12,7 @@ import (
 type ToDoItem struct {
 	Id     int    `json:"id"`
 	Title  string `json:"title"`
-	IsDone bool   `json:"done"`
+	IsDone bool   `json:"done,omitempty"`
 }
 
 // DbMap is a type alias for a map of ToDoItems.  The key
@@ -31,7 +31,7 @@ type DbMap map[int]ToDoItem
 // ANSWER:
 //   I believe that this is a good decision because of the
 //   open/close principle. The struct should not be open for
-//   modification else where and outside of the package and should
+//   modification else where outside of the package and should
 //   only be extend upon. This will ensure that the code works as
 //   it should, modifying it can break the entirety of the
 //   package as it becomes less protected.
@@ -320,7 +320,41 @@ func (t *ToDo) UpdateItem(item ToDoItem) error {
 	//no errors, this function should return nil at the end to indicate
 	//that the item was properly updated in the database.
 
-	return errors.New("UpdateItem() is currently not implemented")
+	fileName := t.dbFileName
+	var fileContents []ToDoItem
+
+	data, err := os.ReadFile(fileName)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(data, &fileContents)
+	if err != nil {
+		return err
+	}
+
+	var idx int
+
+	for i := 0; i <= len(fileContents); i++ {
+		if fileContents[i].Id == item.Id {
+			idx = i
+			break
+		}
+		if i == len(fileContents) {
+			return errors.New("did not find id in database")
+		}
+	}
+
+	fileContents[idx] = item
+
+	jsonUpdate, err := json.MarshalIndent(fileContents, "", "\t")
+
+	err = os.WriteFile(fileName, jsonUpdate, os.ModeAppend)
+	if err != nil {
+		return err
+	}
+
+	return err
 }
 
 // GetItem accepts an item id and returns the item from the DB.
@@ -452,7 +486,7 @@ func (t *ToDo) JsonToItem(jsonString string) (ToDoItem, error) {
 // reason.  For example, the item itself does not exist, or an
 // IO error trying to save the updated status.
 
-// Preconditions:   (1) The database file must exist and be a valid
+// ChangeItemDoneStatus Preconditions:   (1) The database file must exist and be a valid
 //
 //					(2) The item must exist in the DB
 //	    				because we use the item.Id as the key, this
@@ -476,7 +510,17 @@ func (t *ToDo) ChangeItemDoneStatus(id int, value bool) error {
 	//errors along the way, return them.  If everything is successful
 	//return nil at the end to indicate that the item was properly
 
-	return errors.New("ChangeItemDoneStatus() is currently not implemented")
+	item, err := t.GetItem(id)
+	if err != nil {
+		return err
+	}
+
+	err = t.UpdateItem(item)
+	if err != nil {
+		return err
+	}
+
+	return err
 }
 
 //------------------------------------------------------------

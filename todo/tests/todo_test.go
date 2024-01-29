@@ -81,30 +81,6 @@ func TestAddHardCodedItem(t *testing.T) {
 	//TODO: Now finish the test case by looking up the item in the DB
 	//and making sure it matches the item that you put in the DB above
 
-	//sourceFile, err := os.ReadFile(DEFAULT_DB_FILE_NAME)
-	//if err != nil {
-	//	t.Log(err)
-	//}
-	//
-	//var fileContents []db.ToDoItem
-	//
-	//err = json.Unmarshal(sourceFile, &fileContents)
-	//if err != nil {
-	//	t.Log(err)
-	//}
-	//
-	//jsonItem := 0
-	//
-	//for i := 0; i < len(fileContents); i++ {
-	//	if fileContents[i] == item {
-	//		jsonItem = i
-	//		break
-	//	}
-	//	if i == len(fileContents) {
-	//		err = errors.New("did not find item")
-	//	}
-	//}
-
 	fileContents, _ := DB.GetItem(item.Id)
 	assert.Equal(t, item, fileContents, "found added item.id")
 }
@@ -185,7 +161,7 @@ func TestDeleteItem(t *testing.T) {
 
 func TestGetItem(t *testing.T) {
 
-	// test a actual existing id
+	// test an actual existing id
 	id := 1
 	data, err := DB.GetItem(id)
 	assert.NoError(t, err, "Ran into error when running GetItem func")
@@ -195,4 +171,26 @@ func TestGetItem(t *testing.T) {
 	id = 10
 	_, err = DB.GetItem(id)
 	assert.Error(t, err, "Ran into nil when running GetItem func")
+}
+
+func TestUpdateItem(t *testing.T) {
+
+	item := db.ToDoItem{
+		Id:     4,
+		Title:  "Fury Max",
+		IsDone: false,
+	}
+
+	err := DB.UpdateItem(item)
+	if err != nil {
+		return
+	}
+
+	var fileContents []db.ToDoItem
+	data, _ := os.ReadFile(DEFAULT_DB_FILE_NAME)
+	err = json.Unmarshal(data, &fileContents)
+
+	assert.NoError(t, err, "Ran into error while running UpdateItem func")
+	assert.Equal(t, "Fury Max", fileContents[3].Title, "Did not find matching update.")
+
 }
