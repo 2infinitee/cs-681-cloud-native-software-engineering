@@ -57,7 +57,34 @@ const (
 //						   use it.  See github.com/spf13/cobra for information
 //						   on how to use it.
 //
-//	 YOUR ANSWER: <GOES HERE>
+//	 YOUR ANSWER:
+// 								The function processCmdLineFlags's main responsibility
+// 								is to set this program's parameter or passed arguments
+// 								before running. It's the first thing to be called before
+//								anything else in the code as it is placed right at the
+//								very beginning of main(). If there are no flags set
+//								error it will print out what the error message is and exit.
+//
+//								The flag package allows the program ability to have parameters
+//								set at the command line. The flag package is used to set
+//								each parameter that was design in this program. Each
+//								parameter takes in a pointer value, a letter or name to
+//								represent it, a default value, and a description of its usage.
+//
+//								For example, the command `kubectl` by itself isn't useful
+//                				if called by itself. The behavior that it will return
+//								by not passing a parameter or arguement is a help message
+//                				that prints an explanation of how to properly use the
+//                				command with sub-commands their optional parameters.
+//								What triggers the explanation of usage is the flag.Usage()
+//                				function.
+//
+//                				However, if a parameter(s) was set to this program. The
+//    							processCmdLineFlags function will go through and set all
+//								of the global variables, run through a switch case finding
+//								which parameters were set and trigger the appropriate
+//								functions.
+
 func processCmdLineFlags() (AppOptType, error) {
 	flag.StringVar(&dbFileNameFlag, "db", "./data/todo.json", "Name of the database file")
 	flag.BoolVar(&restoreDbFlag, "restore", false, "Restore the database from the backup file")
@@ -188,6 +215,7 @@ func main() {
 			break
 		}
 		fmt.Println("Ok")
+
 	case UPDATE_DB_ITEM:
 		fmt.Println("Running UPDATE_DB_ITEM...")
 		item, err := todo.JsonToItem(updateFlag)
@@ -201,6 +229,7 @@ func main() {
 			break
 		}
 		fmt.Println("Ok")
+
 	case DELETE_DB_ITEM:
 		fmt.Println("Running DELETE_DB_ITEM...")
 		err := todo.DeleteItem(deleteFlag)
@@ -209,12 +238,16 @@ func main() {
 			break
 		}
 		fmt.Println("Ok")
+
 	case CHANGE_ITEM_STATUS:
 		//For the CHANGE_ITEM_STATUS extra credit you will also
 		//need to add some code here
 		fmt.Println("Running CHANGE_ITEM_STATUS...")
-		fmt.Println("Not implemented yet, but it can be for extra credit")
-		fmt.Println("Ok")
+		err := todo.ChangeItemDoneStatus(queryFlag, itemStatusFlag)
+		if err != nil {
+			fmt.Println("Error: ", err)
+			break
+		}
 	default:
 		fmt.Println("INVALID_APP_OPT")
 	}

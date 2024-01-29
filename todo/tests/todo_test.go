@@ -9,6 +9,7 @@ package tests
 //of helper functions to generate random data to make testing easier.
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"testing"
@@ -24,7 +25,8 @@ import (
 // then go into the /data directory.  Thus this is why we are setting the
 // default file name to "../data/todo.json"
 const (
-	DEFAULT_DB_FILE_NAME = "../data/todo.json"
+	DEFAULT_DB_FILE_NAME        = "../data/todo.json"
+	DEFAULT_DB_BACKUP_FILE_NAME = "../data/todo.json.bak"
 )
 
 var (
@@ -73,11 +75,14 @@ func TestAddHardCodedItem(t *testing.T) {
 	//I will get you started, uncomment the lines below to add to the DB
 	//and ensure no errors:
 	//---------------------------------------------------------------
-	//err := DB.AddItem(item)
-	//assert.NoError(t, err, "Error adding item to DB")
+	err := DB.AddItem(item)
+	assert.NoError(t, err, "Error adding item to DB")
 
 	//TODO: Now finish the test case by looking up the item in the DB
 	//and making sure it matches the item that you put in the DB above
+
+	fileContents, _ := DB.GetItem(item.Id)
+	assert.Equal(t, item, fileContents, "found added item.id")
 }
 
 func TestAddRandomStructItem(t *testing.T) {
@@ -104,15 +109,88 @@ func TestAddRandomItem(t *testing.T) {
 
 }
 
-// TODO: Please delete this test from your submission, it does not do anything
-// but i wanted to demonstrate how you can starting shelling out your tests
-// and then implment them later.  The go testing framework provides a
-// Skip() function that just tells the testing framework to skip or ignore
-// this test function
-func TestAddPlaceholderTest(t *testing.T) {
-	t.Skip("Placeholder test not implemented yet")
-}
-
 //TODO: Create additional tests to showcase the correct operation of your program
 //for example getting an item, getting all items, updating items, and so on. Be
 //creative here.
+
+// RestoreDB func test
+func TestRestoreDB(t *testing.T) {
+
+	assert.FileExists(t, DEFAULT_DB_BACKUP_FILE_NAME, "todo.json.back file in ../data does not exist")
+
+	// remove the current db
+	err := os.Remove(DEFAULT_DB_FILE_NAME)
+	assert.NoError(t, err, "Found error while removing file in TestRestoreDB")
+	assert.NoFileExists(t, DEFAULT_DB_FILE_NAME, "todo.json file in ../data exist")
+
+	// use the restoreDB function and see if the file was created
+	err = DB.RestoreDB()
+	assert.NoError(t, err, "Found error while running RestoreDB in TestRestoreDB")
+	assert.FileExists(t, DEFAULT_DB_FILE_NAME, "todo.json file in ../data does not exist")
+}
+
+func TestGetAllItems(t *testing.T) {
+	items, err := DB.GetAllItems()
+	var fileContents []db.ToDoItem
+	data, _ := os.ReadFile(DEFAULT_DB_BACKUP_FILE_NAME)
+	err = json.Unmarshal(data, &fileContents)
+
+	assert.NoError(t, err, "Found error while running TestGetAllItems")
+	assert.Equal(t, fileContents, items, "Did not find expected value.")
+}
+
+func TestDeleteItem(t *testing.T) {
+
+	// add a new item.id
+	item := db.ToDoItem{
+		Id:     21,
+		Title:  "try something new",
+		IsDone: false,
+	}
+	err := DB.AddItem(item)
+	assert.NoError(t, err, "Found error while running TestAddItem")
+
+	// delete newly created item.id
+	err = DB.DeleteItem(21)
+	assert.NoError(t, err, "The func DeleteItem returned a error")
+
+	// test to see if item.id exists
+	err = DB.DeleteItem(21)
+	assert.Error(t, err, "Did not pass because TestDeleteItem Id should return error")
+}
+
+func TestGetItem(t *testing.T) {
+
+	// test an actual existing id
+	id := 1
+	data, err := DB.GetItem(id)
+	assert.NoError(t, err, "Ran into error when running GetItem func")
+	assert.Equal(t, id, data.Id, " Did not find matching ID during GetItem Run")
+
+	// test a non-existing id, error should return as error
+	id = 10
+	_, err = DB.GetItem(id)
+	assert.Error(t, err, "Ran into nil when running GetItem func")
+}
+
+func TestUpdateItem(t *testing.T) {
+
+	item := db.ToDoItem{
+		Id:     4,
+		Title:  "Fury Max",
+		IsDone: false,
+	}
+
+	err := DB.UpdateItem(item)
+	if err != nil {
+		return
+	}
+
+	var fileContents []db.ToDoItem
+	data, _ := os.ReadFile(DEFAULT_DB_FILE_NAME)
+	err = json.Unmarshal(data, &fileContents)
+
+	assert.NoError(t, err, "Ran into error while running UpdateItem func")
+	assert.Equal(t, "Fury Max", fileContents[3].Title, "Did not find matching update.")
+
+}
