@@ -3,10 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"os"
 
+	"github.com/cs-681-cloud-native-software-engineering/todo-api/voterApi/api"
 	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
 )
 
 // global variables from the cli as flags
@@ -40,8 +41,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	r.GET("/voter", apiHandler.)
-
-
+	r.GET("/voter", apiHandler.GetVoter())
 
 }

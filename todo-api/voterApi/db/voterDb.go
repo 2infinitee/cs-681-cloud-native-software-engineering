@@ -21,6 +21,7 @@ type VoterData struct {
 	VoterId      int            `json:"voterId"`
 	FirstName    string         `json:"firstName"`
 	LastName     string         `json:"lastName"`
+	IsDone       bool           `json:"isDone"`
 	VoterHistory []VoterHistory `json:"voterHistory"`
 }
 
@@ -32,6 +33,8 @@ type vMap map[int]VoterData
 type Voter struct {
 	voterMap vMap
 }
+
+// New creates a new map of the database
 
 func New() (*Voter, error) {
 	voter := &Voter{
@@ -69,7 +72,7 @@ func (v *Voter) DeleteAll() error {
 
 // UpdateVoter changes voter information
 // before it changes it checks to see if voter exists
-func (v *Voter) UpdateVoter(voter VoterData) (VoterData, error) {
+func (v *Voter) UpdateVoter(voter VoterData) error {
 	_, ok := v.voterMap[voter.VoterId]
 	if !ok {
 		return VoterData{}, errors.New("item does not exist")
