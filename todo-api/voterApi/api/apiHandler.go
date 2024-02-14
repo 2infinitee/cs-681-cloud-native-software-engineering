@@ -105,7 +105,7 @@ func (api *VoterAPI) GetVoter(ctx *gin.Context) {
 		return
 	}
 
-	voter, err := api.db.GetVoter(int(convertIdToInt64))
+	voter, err := api.db.GetVoter(uint(convertIdToInt64))
 	if err != nil {
 		log.Println("Voter not found: ", err)
 		ctx.AbortWithStatus(http.StatusNotFound)
@@ -160,7 +160,7 @@ func (api *VoterAPI) DeleteVoter(ctx *gin.Context) {
 	voterId := ctx.Param("voterId")
 	convertIdToInt64, _ := strconv.ParseInt(voterId, 10, 32)
 
-	if err := api.db.DeleteVoter(int(convertIdToInt64)); err != nil {
+	if err := api.db.DeleteVoter(uint(convertIdToInt64)); err != nil {
 		log.Println("Error deleting voter: ", err)
 		ctx.AbortWithStatus(http.StatusInternalServerError)
 		return

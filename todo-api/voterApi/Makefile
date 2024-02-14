@@ -46,9 +46,10 @@ restore-db:
 
 .PHONY: load-db
 load-db:
-	curl -d '{ "voterId": 1, "firstName": "yoyo", "lastName": "ma", "isDone": false}' -H "Content-Type: application/json" -X POST http://localhost:8080/voter
-	curl -d '{ "voterId": 2, "firstName": "jesse", "lastName": "pinkman", "isDone": false}' -H "Content-Type: application/json" -X POST http://localhost:8080/voter
-	curl -d '{ "voterId": 3, "firstName": "walter","lastName": "white", "isDone": false}' -H "Content-Type: application/json" -X POST http://localhost:8080/voter
+	curl -d '{"voterId":1,"firstName":"yoyo","lastName":"ma","isDone":false,"voterHistory":[{"pollId":123,"voterId":1,"voteDate":"2006-01-02T15:04:05Z"},{"pollId":567,"voterId":1,"voteDate":"2006-01-02T15:04:05Z"}]}' -H "Content-Type: application/json" -X POST http://localhost:8080/voter
+	curl -d '{"voterId":2,"firstName":"liam","lastName":"nelson","isDone":false,"voterHistory":[{"pollId":198,"voterId":2,"voteDate":"2006-01-02T15:04:05Z"},{"pollId":288,"voterId":2,"voteDate":"2006-01-02T15:04:05Z"}]}' -H "Content-Type: application/json" -X POST http://localhost:8080/voter
+	curl -d '{"voterId":3,"firstName":"roger","lastName":"bowman","isDone":false,"voterHistory":[{"pollId":144,"voterId":3,"voteDate":"2006-01-02T15:04:05Z"},{"pollId":288,"voterId":3,"voteDate":"2006-01-02T15:04:05Z"}]}' -H "Content-Type: application/json" -X POST http://localhost:8080/voter
+	curl -d '{"voterId":4,"firstName":"ken","lastName":"masters","isDone":false,"voterHistory":[{"pollId":554,"voterId":4,"voteDate":"2006-01-02T15:04:05Z"},{"pollId":285,"voterId":4,"voteDate":"2006-01-02T15:04:05Z"}]}' -H "Content-Type: application/json" -X POST http://localhost:8080/voter
 
 .PHONY: update-2
 update-2:
@@ -61,6 +62,10 @@ get-by-id:
 .PHONY: get-all
 get-all:
 	curl -w "HTTP Status: %{http_code}\n" -H "Content-Type: application/json" -X GET http://localhost:8080/voter
+
+.PHONY: delete-by-id
+delete-by-id:
+	curl -w "HTTP Status: %{http_code}\n" -H "Content-Type: application/json" -X DELETE http://localhost:8080/voter/2
 
 .PHONY: delete-all
 delete-all:

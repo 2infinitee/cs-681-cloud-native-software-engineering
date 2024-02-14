@@ -10,9 +10,9 @@ import (
 // VoterHistory struct to keep track how many
 // times a voter has voted
 type VoterHistory struct {
-	PollId    int       `json:"pollId"`
-	VoterId   int       `json:"voterId"`
-	VoterDate time.Time `json:"voterDate"`
+	PollId   uint      `json:"pollId"`
+	VoterId  uint      `json:"voterId"`
+	VoteDate time.Time `json:"voteDate"`
 }
 
 // VoterData struct to keep track of unique

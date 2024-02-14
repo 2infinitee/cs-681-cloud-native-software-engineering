@@ -41,8 +41,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	if instance.
-
 	instance.GET("/voter", apiHandler.ListAllVoters)
 	instance.GET("/voter/:voterId", apiHandler.GetVoter)
 	instance.POST("/voter", apiHandler.AddVoter)
