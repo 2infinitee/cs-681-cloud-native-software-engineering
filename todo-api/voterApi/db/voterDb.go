@@ -18,16 +18,16 @@ type VoterHistory struct {
 // VoterData struct to keep track of unique
 // voter information
 type VoterData struct {
-	VoterId      int            `json:"voterId"`
+	VoterId      uint           `json:"voterId"`
 	FirstName    string         `json:"firstName"`
 	LastName     string         `json:"lastName"`
 	IsDone       bool           `json:"isDone"`
-	VoterHistory []VoterHistory `json:"voterHistory"`
+	VoterHistory []VoterHistory `json:"voterHistory,omitempty"`
 }
 
 // vMap is an alias for a map of VoterData and the
 // key will be VoterData.VoterId
-type vMap map[int]VoterData
+type vMap map[uint]VoterData
 
 // Voter struct to store db data in memory
 type Voter struct {
@@ -38,7 +38,7 @@ type Voter struct {
 
 func New() (*Voter, error) {
 	voter := &Voter{
-		voterMap: make(map[int]VoterData),
+		voterMap: make(map[uint]VoterData),
 	}
 
 	return voter, nil
@@ -57,7 +57,7 @@ func (v *Voter) AddVoter(voter VoterData) error {
 }
 
 // DeleteVoter allows deletion of voter by VoterId
-func (v *Voter) DeleteVoter(voterId int) error {
+func (v *Voter) DeleteVoter(voterId uint) error {
 	delete(v.voterMap, voterId)
 
 	return nil
@@ -66,7 +66,7 @@ func (v *Voter) DeleteVoter(voterId int) error {
 // DeleteAll removes all items from the DB
 // to be exposed via /voters
 func (v *Voter) DeleteAll() error {
-	v.voterMap = make(map[int]VoterData)
+	v.voterMap = make(map[uint]VoterData)
 	return nil
 }
 
@@ -75,25 +75,34 @@ func (v *Voter) DeleteAll() error {
 func (v *Voter) UpdateVoter(voter VoterData) error {
 	_, ok := v.voterMap[voter.VoterId]
 	if !ok {
-		return VoterData{}, errors.New("item does not exist")
+		return errors.New("voter does not exist")
 	}
-	return voter, nil
+	v.voterMap[voter.VoterId] = voter
+
+	return nil
 }
 
 // GetVoter gets voter based on id passed
-func (v *Voter) GetVoter(voterId int) (VoterData, error) {
+func (v *Voter) GetVoter(voterId uint) (VoterData, error) {
 
 	voter, ok := v.voterMap[voterId]
 	if !ok {
-		return VoterData{}, errors.New("item does not exist")
+		return VoterData{}, errors.New("voter does not exist")
 	}
 
 	return voter, nil
 }
 
 // ChangeItemDoneStatus is not yet implemented
-func (v *Voter) ChangeItemDoneStatus(id int, value bool) error {
-	return errors.New("not implemented")
+func (v *Voter) ChangeItemDoneStatus(voterId uint, isDone bool) error {
+	voter, ok := v.voterMap[voterId]
+	if !ok {
+		return errors.New("voter does not exist")
+	}
+
+	voter.IsDone = isDone
+
+	return nil
 }
 
 // GetAllVoters grabs all voters in the database

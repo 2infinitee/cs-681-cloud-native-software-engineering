@@ -1,0 +1,20 @@
+[
+{
+  "voterId": 1,
+  "firstName": "yoyo",
+  "lastName": "ma",
+  "isDone": false
+},
+{
+  "voterId": 2,
+  "firstName": "jesse",
+  "lastName": "pinkman",
+  "isDone": false
+},
+{
+  "voterId": 3,
+  "firstName": "walter",
+  "lastName": "white",
+  "isDone": false
+}
+]

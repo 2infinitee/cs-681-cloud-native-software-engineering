@@ -1,12 +1,12 @@
 package api
 
 import (
-	"fmt"
-	"github.com/cs-681-cloud-native-software-engineering/todo-api/voterApi/db"
-	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/cs-681-cloud-native-software-engineering/todo-api/voterApi/db"
+	"github.com/gin-gonic/gin"
 )
 
 // VoterAPI creates and maintains a reference to the data handler
@@ -24,13 +24,33 @@ func New() (*VoterAPI, error) {
 	return &VoterAPI{db: dbHandler}, nil
 }
 
+// ListAllVoters implements a GET /voter to grab all voters and their data
 func (api *VoterAPI) ListAllVoters(ctx *gin.Context) {
+	voterList, err := api.db.GetAllVoters()
+	if err != nil {
+		log.Println("Error getting all voters: ", err)
+		ctx.AbortWithStatus(http.StatusNotFound)
+		return
+	}
+
+	if voterList == nil {
+		voterList = make([]db.VoterData, 0)
+	}
+
+	ctx.JSON(http.StatusOK, voterList)
+}
+
+// ListSelectVoters implements GET /v2/voter
+// and returns voters that are either done or not done
+// depending on the value set /v2/voter?done=true
+func (api *VoterAPI) ListSelectVoters(ctx *gin.Context) {
 
 	// load data into memory
 	voterList, err := api.db.GetAllVoters()
 	if err != nil {
-		log.Println("Error Getting All Items: ", err)
+		log.Println("Error getting all voters: ", err)
 		ctx.AbortWithStatus(http.StatusNotFound)
+		return
 	}
 
 	// if the db is empty make an empty slice
@@ -71,7 +91,6 @@ func (api *VoterAPI) ListAllVoters(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, filteredList)
-
 }
 
 // GetVoter implements GET method /voter/:voterId
@@ -120,7 +139,6 @@ func (api *VoterAPI) AddVoter(ctx *gin.Context) {
 // adds a new voter to the db through the api
 func (api *VoterAPI) UpdateVoter(ctx *gin.Context) {
 	var voterData db.VoterData
-
 	if err := ctx.ShouldBindJSON(&voterData); err != nil {
 		log.Println("Error binding JSON: ", err)
 		ctx.AbortWithStatus(http.StatusBadRequest)
@@ -171,28 +189,12 @@ func (api *VoterAPI) CrashSimulator(ctx *gin.Context) {
 
 func (api *VoterAPI) HealthCheck(ctx *gin.Context) {
 
-	votersProcessed := count(ctx)
-
 	ctx.JSON(http.StatusOK,
 		gin.H{
-			"status:":          "ok",
-			"version":          "0.0.1",
-			"uptime":           "1",
-			"voters_processed": votersProcessed,
-		},
-	)
-}
-
-func (api *VoterAPI) count(ctx *gin.Context) int {
-
-	numberOfVoters, err := api.db.GetAllVoters()
-	if err != nil {
-		fmt.Println("Error getting all voters for counting: ", err)
-		ctx.AbortWithStatus(http.StatusNotFound)
-		return 0
-	}
-
-	counted := len(numberOfVoters)
-
-	return counted
+			"status:":            "ok",
+			"version":            "0.0.1",
+			"uptime":             1,
+			"voters_processed":   1,
+			"errors_encountered": 1,
+		})
 }
