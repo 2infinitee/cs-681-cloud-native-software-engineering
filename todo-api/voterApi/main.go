@@ -10,6 +10,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const VOTERAPIVERSION = 1.0
+
 // global variables from the cli as flags
 var (
 	hostFlag string
@@ -43,6 +45,8 @@ func main() {
 
 	instance.GET("/voter", apiHandler.ListAllVoters)
 	instance.GET("/voter/:voterId", apiHandler.GetVoter)
+	instance.GET("/voter/:voterId/polls", apiHandler.GetAllVoterPolls)
+	instance.GET("/voter/:voterId/polls/:pollId", apiHandler.GetVoterPoll)
 	instance.POST("/voter", apiHandler.AddVoter)
 	instance.PUT("/voter", apiHandler.UpdateVoter)
 	instance.DELETE("/voter/:voterId", apiHandler.DeleteVoter)

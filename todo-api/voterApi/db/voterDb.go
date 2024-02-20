@@ -22,7 +22,7 @@ type VoterData struct {
 	FirstName    string         `json:"firstName"`
 	LastName     string         `json:"lastName"`
 	IsDone       bool           `json:"isDone"`
-	VoterHistory []VoterHistory `json:"voterHistory,omitempty"`
+	VoterHistory []VoterHistory `json:"voterHistory"`
 }
 
 // vMap is an alias for a map of VoterData and the
@@ -31,12 +31,20 @@ type vMap map[uint]VoterData
 
 // Voter struct to store db data in memory
 type Voter struct {
-	voterMap vMap
+	voterMap         vMap
+	databaseFileName string
+}
+
+type pMap map[uint]VoterHistory
+
+type VoterPolls struct {
+	pollMap pMap
 }
 
 // New creates a new map of the database
 
 func New() (*Voter, error) {
+
 	voter := &Voter{
 		voterMap: make(map[uint]VoterData),
 	}
@@ -91,6 +99,41 @@ func (v *Voter) GetVoter(voterId uint) (VoterData, error) {
 	}
 
 	return voter, nil
+}
+
+// GetAllVoterPolls gets voter based on id passed
+func (v *Voter) GetAllVoterPolls(voterId uint) ([]VoterHistory, error) {
+
+	voter, ok := v.voterMap[voterId]
+	if !ok {
+		return VoterData{}.VoterHistory, errors.New("voter does not have polls")
+	}
+
+	return voter.VoterHistory, nil
+}
+
+// GetVoterPoll gets voter based on id passed
+func (v *Voter) GetVoterPoll(voterId uint, pollId uint) (VoterHistory, error) {
+
+	voter, ok := v.voterMap[voterId]
+	if !ok {
+		return VoterHistory{}, errors.New("voter does not have polls")
+	}
+
+	fmt.Println("voter ", voter)
+	fmt.Println("voter history ", voter.VoterHistory)
+	//pollMap := make(map[uint]VoterHistory)
+	//pollData = voter.VoterHistory
+
+	//p := &VoterPolls{
+	//	pollMap: make(map[uint]VoterHistory),
+	//}
+	//
+	//poll := p.pollMap[pollId]
+
+	fmt.Println(pollId)
+
+	return VoterHistory{}, nil
 }
 
 // ChangeItemDoneStatus is not yet implemented

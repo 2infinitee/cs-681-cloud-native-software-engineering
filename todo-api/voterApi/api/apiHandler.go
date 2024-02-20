@@ -4,10 +4,28 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/cs-681-cloud-native-software-engineering/todo-api/voterApi/db"
 	"github.com/gin-gonic/gin"
 )
+
+const VOTERAPIVERSION = "1.0.0"
+
+var (
+	startTime     time.Time
+	errorsCounted uint
+)
+
+func uptime() time.Duration {
+	return time.Since(startTime) / time.Second
+}
+
+func countedErrors(err error) {
+	if err != nil {
+		errorsCounted++
+	}
+}
 
 // VoterAPI creates and maintains a reference to the data handler
 type VoterAPI struct {
@@ -16,6 +34,9 @@ type VoterAPI struct {
 
 // New allows the start of a new api handler
 func New() (*VoterAPI, error) {
+	// grabs uptime duration in seconds
+	startTime = time.Now()
+
 	dbHandler, err := db.New()
 	if err != nil {
 		return nil, err
@@ -27,6 +48,7 @@ func New() (*VoterAPI, error) {
 // ListAllVoters implements a GET /voter to grab all voters and their data
 func (api *VoterAPI) ListAllVoters(ctx *gin.Context) {
 	voterList, err := api.db.GetAllVoters()
+	countedErrors(err)
 	if err != nil {
 		log.Println("Error getting all voters: ", err)
 		ctx.AbortWithStatus(http.StatusNotFound)
@@ -47,6 +69,7 @@ func (api *VoterAPI) ListSelectVoters(ctx *gin.Context) {
 
 	// load data into memory
 	voterList, err := api.db.GetAllVoters()
+	countedErrors(err)
 	if err != nil {
 		log.Println("Error getting all voters: ", err)
 		ctx.AbortWithStatus(http.StatusNotFound)
@@ -70,6 +93,7 @@ func (api *VoterAPI) ListSelectVoters(ctx *gin.Context) {
 	// if doneStatus is not empty then we need to filter
 	// based on the doneStatus list
 	done, err := strconv.ParseBool(doneStatus)
+	countedErrors(err)
 	if err != nil {
 		log.Println("Error converting done to bool: ", err)
 		ctx.AbortWithStatus(http.StatusBadRequest)
@@ -98,7 +122,9 @@ func (api *VoterAPI) ListSelectVoters(ctx *gin.Context) {
 func (api *VoterAPI) GetVoter(ctx *gin.Context) {
 
 	voterId := ctx.Param("voterId")
+
 	convertIdToInt64, err := strconv.ParseInt(voterId, 10, 32)
+	countedErrors(err)
 	if err != nil {
 		log.Println("Error Converting voterId to int64", err)
 		ctx.AbortWithStatus(http.StatusBadRequest)
@@ -106,6 +132,66 @@ func (api *VoterAPI) GetVoter(ctx *gin.Context) {
 	}
 
 	voter, err := api.db.GetVoter(uint(convertIdToInt64))
+	countedErrors(err)
+	if err != nil {
+		log.Println("Voter not found: ", err)
+		ctx.AbortWithStatus(http.StatusNotFound)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, voter)
+}
+
+// GetAllVoterPolls implements GET method /voter/:voterId/polls
+// returns a single voter pool
+func (api *VoterAPI) GetAllVoterPolls(ctx *gin.Context) {
+
+	voterId := ctx.Param("voterId")
+
+	convertIdToInt64, err := strconv.ParseInt(voterId, 10, 32)
+	countedErrors(err)
+	if err != nil {
+		log.Println("Error Converting voterId to int64", err)
+		ctx.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	voter, err := api.db.GetAllVoterPolls(uint(convertIdToInt64))
+	countedErrors(err)
+	if err != nil {
+		log.Println("Voter not found: ", err)
+		ctx.AbortWithStatus(http.StatusNotFound)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, voter)
+}
+
+// GetVoterPoll implements GET method /voter/:voterId/polls
+// returns a single voter pool
+func (api *VoterAPI) GetVoterPoll(ctx *gin.Context) {
+
+	voterId := ctx.Param("voterId")
+	pollId := ctx.Param("pollId")
+
+	convertIdToInt64, err := strconv.ParseInt(voterId, 10, 32)
+	countedErrors(err)
+	if err != nil {
+		log.Println("Error Converting voterId to int64", err)
+		ctx.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	convertPollIdToInt64, err := strconv.ParseInt(pollId, 10, 32)
+	countedErrors(err)
+	if err != nil {
+		log.Println("Error Converting voterId to int64", err)
+		ctx.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	voter, err := api.db.GetVoterPoll(uint(convertIdToInt64), uint(convertPollIdToInt64))
+	countedErrors(err)
 	if err != nil {
 		log.Println("Voter not found: ", err)
 		ctx.AbortWithStatus(http.StatusNotFound)
@@ -121,12 +207,14 @@ func (api *VoterAPI) AddVoter(ctx *gin.Context) {
 	var voterData db.VoterData
 
 	if err := ctx.ShouldBindJSON(&voterData); err != nil {
+		countedErrors(err)
 		log.Println("Error binding JSON: ", err)
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
 	if err := api.db.AddVoter(voterData); err != nil {
+		countedErrors(err)
 		log.Println("Error adding voter", err)
 		ctx.AbortWithStatus(http.StatusInternalServerError)
 		return
@@ -140,12 +228,14 @@ func (api *VoterAPI) AddVoter(ctx *gin.Context) {
 func (api *VoterAPI) UpdateVoter(ctx *gin.Context) {
 	var voterData db.VoterData
 	if err := ctx.ShouldBindJSON(&voterData); err != nil {
+		countedErrors(err)
 		log.Println("Error binding JSON: ", err)
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
 	if err := api.db.UpdateVoter(voterData); err != nil {
+		countedErrors(err)
 		log.Println("Error adding voter", err)
 		ctx.AbortWithStatus(http.StatusInternalServerError)
 		return
@@ -161,6 +251,7 @@ func (api *VoterAPI) DeleteVoter(ctx *gin.Context) {
 	convertIdToInt64, _ := strconv.ParseInt(voterId, 10, 32)
 
 	if err := api.db.DeleteVoter(uint(convertIdToInt64)); err != nil {
+		countedErrors(err)
 		log.Println("Error deleting voter: ", err)
 		ctx.AbortWithStatus(http.StatusInternalServerError)
 		return
@@ -175,6 +266,7 @@ func (api *VoterAPI) DeleteVoter(ctx *gin.Context) {
 func (api *VoterAPI) DeleteAllVoters(ctx *gin.Context) {
 
 	if err := api.db.DeleteAll(); err != nil {
+		countedErrors(err)
 		log.Println("Error deleting all items: ", err)
 		ctx.AbortWithStatus(http.StatusInternalServerError)
 		return
@@ -189,12 +281,29 @@ func (api *VoterAPI) CrashSimulator(ctx *gin.Context) {
 
 func (api *VoterAPI) HealthCheck(ctx *gin.Context) {
 
+	processed, _ := api.CountVoters()
+
 	ctx.JSON(http.StatusOK,
 		gin.H{
-			"status:":            "ok",
-			"version":            "0.0.1",
-			"uptime":             1,
-			"voters_processed":   1,
-			"errors_encountered": 1,
+			"status:":            "200",
+			"version":            VOTERAPIVERSION,
+			"uptime_in_seconds":  uptime(),
+			"voters_processed":   processed,
+			"errors_encountered": errorsCounted,
 		})
+}
+
+func (api *VoterAPI) CountVoters() (uint, error) {
+	numberOfVoters, err := api.db.GetAllVoters()
+	if err != nil {
+		return 0, err
+	}
+
+	var counted uint
+
+	for i := 0; i < len(numberOfVoters); i++ {
+		counted++
+	}
+
+	return counted, nil
 }
