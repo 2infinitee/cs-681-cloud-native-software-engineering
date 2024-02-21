@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const VOTERAPIVERSION = "1.0.0"
+const VOTER_API_VERSION = "1.0.0"
 
 var (
 	startTime     time.Time
@@ -244,6 +244,24 @@ func (api *VoterAPI) UpdateVoter(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, voterData)
 }
 
+func (api *VoterAPI) ChangeDoneStatus(ctx *gin.Context) {
+	var voterData db.VoterData
+	if err := ctx.ShouldBindJSON(&voterData); err != nil {
+		countedErrors(err)
+		log.Println("Error binding JSON: ", err)
+		ctx.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	if err := api.db.ChangeDoneStatus(voterData.VoterId, voterData.IsDone); err != nil {
+		countedErrors(err)
+		log.Println("Error updating voter isDone: ", err)
+		ctx.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	ctx.JSON(http.StatusOK, voterData)
+}
+
 // DeleteVoter implements DELETE /voter/:voterId
 // deletes a single voter
 func (api *VoterAPI) DeleteVoter(ctx *gin.Context) {
@@ -286,7 +304,7 @@ func (api *VoterAPI) HealthCheck(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK,
 		gin.H{
 			"status:":            "200",
-			"version":            VOTERAPIVERSION,
+			"version":            VOTER_API_VERSION,
 			"uptime_in_seconds":  uptime(),
 			"voters_processed":   processed,
 			"errors_encountered": errorsCounted,

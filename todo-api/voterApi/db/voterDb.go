@@ -31,8 +31,7 @@ type vMap map[uint]VoterData
 
 // Voter struct to store db data in memory
 type Voter struct {
-	voterMap         vMap
-	databaseFileName string
+	voterMap vMap
 }
 
 type pMap map[uint]VoterHistory
@@ -56,7 +55,7 @@ func New() (*Voter, error) {
 func (v *Voter) AddVoter(voter VoterData) error {
 	_, ok := v.voterMap[voter.VoterId]
 	if ok {
-		return errors.New("voter exists")
+		return errors.New("voter already exists")
 	}
 
 	v.voterMap[voter.VoterId] = voter
@@ -66,6 +65,11 @@ func (v *Voter) AddVoter(voter VoterData) error {
 
 // DeleteVoter allows deletion of voter by VoterId
 func (v *Voter) DeleteVoter(voterId uint) error {
+	_, ok := v.voterMap[voterId]
+	if !ok {
+		return errors.New("did not find voter id to delete")
+	}
+
 	delete(v.voterMap, voterId)
 
 	return nil
@@ -83,7 +87,7 @@ func (v *Voter) DeleteAll() error {
 func (v *Voter) UpdateVoter(voter VoterData) error {
 	_, ok := v.voterMap[voter.VoterId]
 	if !ok {
-		return errors.New("voter does not exist")
+		return errors.New("voter does not exist in the database")
 	}
 	v.voterMap[voter.VoterId] = voter
 
@@ -95,7 +99,7 @@ func (v *Voter) GetVoter(voterId uint) (VoterData, error) {
 
 	voter, ok := v.voterMap[voterId]
 	if !ok {
-		return VoterData{}, errors.New("voter does not exist")
+		return VoterData{}, errors.New("voter does not exist in the database")
 	}
 
 	return voter, nil
@@ -136,14 +140,15 @@ func (v *Voter) GetVoterPoll(voterId uint, pollId uint) (VoterHistory, error) {
 	return VoterHistory{}, nil
 }
 
-// ChangeItemDoneStatus is not yet implemented
-func (v *Voter) ChangeItemDoneStatus(voterId uint, isDone bool) error {
+// ChangeDoneStatus is not yet implemented
+func (v *Voter) ChangeDoneStatus(voterId uint, isDone bool) error {
 	voter, ok := v.voterMap[voterId]
 	if !ok {
-		return errors.New("voter does not exist")
+		return errors.New("voter does not exist in the database")
 	}
 
 	voter.IsDone = isDone
+	v.voterMap[voterId] = voter
 
 	return nil
 }
@@ -160,17 +165,26 @@ func (v *Voter) GetAllVoters() ([]VoterData, error) {
 }
 
 // PrintVoter outputs voter information to console in pretty format
-func (v *Voter) PrintVoter(voter VoterData) {
-	jsonBytes, _ := json.MarshalIndent(voter, "", " ")
+func (v *Voter) PrintVoter(voter VoterData) error {
+	jsonBytes, err := json.MarshalIndent(voter, "", " ")
+	if err != nil {
+		return errors.New("could not convert data to pretty JSON format")
+	}
 	fmt.Println(string(jsonBytes))
+
+	return nil
 }
 
 // PrintAllVoters outputs all voter data in pretty format
 // the PrintVoter is called per voter data
-func (v *Voter) PrintAllVoters(voter []VoterData) {
+func (v *Voter) PrintAllVoters(voter []VoterData) error {
 	for _, voterInfo := range voter {
-		v.PrintVoter(voterInfo)
+		err := v.PrintVoter(voterInfo)
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 // JsonToVoter is a function that allows JSON to be take in as a VoterData

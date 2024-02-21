@@ -49,6 +49,7 @@ func main() {
 	instance.GET("/voter/:voterId/polls/:pollId", apiHandler.GetVoterPoll)
 	instance.POST("/voter", apiHandler.AddVoter)
 	instance.PUT("/voter", apiHandler.UpdateVoter)
+	instance.PUT("/voter/status", apiHandler.ChangeDoneStatus)
 	instance.DELETE("/voter/:voterId", apiHandler.DeleteVoter)
 	instance.DELETE("/voter", apiHandler.DeleteAllVoters)
 
