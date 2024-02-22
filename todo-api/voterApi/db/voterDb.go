@@ -124,20 +124,13 @@ func (v *Voter) GetVoterPoll(voterId uint, pollId uint) (VoterHistory, error) {
 		return VoterHistory{}, errors.New("voter does not have polls")
 	}
 
-	fmt.Println("voter ", voter)
-	fmt.Println("voter history ", voter.VoterHistory)
-	//pollMap := make(map[uint]VoterHistory)
-	//pollData = voter.VoterHistory
+	voterHistoryMap := make(map[uint]VoterHistory)
 
-	//p := &VoterPolls{
-	//	pollMap: make(map[uint]VoterHistory),
-	//}
-	//
-	//poll := p.pollMap[pollId]
+	for _, data := range voter.VoterHistory {
+		voterHistoryMap[data.PollId] = data
+	}
 
-	fmt.Println(pollId)
-
-	return VoterHistory{}, nil
+	return voterHistoryMap[pollId], nil
 }
 
 // ChangeDoneStatus is not yet implemented
