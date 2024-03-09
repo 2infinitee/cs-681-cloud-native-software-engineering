@@ -29,7 +29,7 @@ services:
         condition: service_started
 
   redis-api:
-    image: cs-t681-voter-api:v3
+    image: jhyang/cs-t681-voter-api:v3
     container_name: voter-api-1
     restart: always
     ports:

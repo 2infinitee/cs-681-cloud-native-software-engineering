@@ -3,6 +3,7 @@ package api
 import (
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
@@ -295,6 +296,10 @@ func (api *VoterAPI) DeleteAllVoters(ctx *gin.Context) {
 
 func (api *VoterAPI) CrashSimulator(ctx *gin.Context) {
 	panic("Simulating a unexpected crash")
+}
+
+func (api *VoterAPI) KillSim(ctx *gin.Context) {
+	os.Exit(99)
 }
 
 func (api *VoterAPI) HealthCheck(ctx *gin.Context) {

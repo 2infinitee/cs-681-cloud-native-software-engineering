@@ -5,11 +5,15 @@ help:
 	@echo "Usage make <TARGET>"
 	@echo ""
 	@echo "	Targets:"
-	@echo "		voterContainer"
+	@echo "		setup - This builds a working setup for docker compose in this lab. It uses a container on my personal docker repo (arm64 based)."
+	@echo "		clean - This will clean out all images by running a docker stop and remove all container. **BE CAUTIOUS**"
+	@echo "		build container - This will build the container based on your local machine's architecture."
+	@echo "		init-redis - This will build a setup from a local container you have to built and deploy it to docker compose. **Build the container first!!!***"
+
 
 .PHONY: build-container
 build-container:
-	docker build --tag cs-t681-voter-api:v2 -f ./voterApi/Dockerfile voterApi
+	docker build --tag cs-t681-voter-api:v3 -f ./voterApi/Dockerfile voterApi
 
 .PHONY: runVoterApi
 runVoterApi:
@@ -27,6 +31,9 @@ volume: clean setup-three load-db
 .PHONE: init-redis
 init-redis: clean setup-four
 
+.PHONE: setup
+setup: build-container setup-five get-redis-cli
+
 .PHONY: setup-one
 setup-one:
 	docker compose -f ./redis/1-basic/redis-docker-compose.yaml up -d
@@ -42,6 +49,10 @@ setup-three:
 .PHONY: setup-four
 setup-four:
 	docker compose -f ./redis/4-init-redis/redis-docker-compose.yaml up -d
+
+.PHONY: setup-fice
+setup-five:
+	docker compose -f ./redis/4-init-redis/redis-docker-compose-pull-only.yaml up -d
 
 .PHONY: get-redis-cli
 get-redis-cli:

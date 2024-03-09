@@ -53,6 +53,7 @@ func main() {
 	instance.DELETE("/voter/:voterId", apiHandler.DeleteVoter)
 	instance.DELETE("/voter", apiHandler.DeleteAllVoters)
 
+	instance.GET("/kill", apiHandler.KillSim)
 	instance.GET("/crash", apiHandler.CrashSimulator)
 	instance.GET("/health", apiHandler.HealthCheck)
 
