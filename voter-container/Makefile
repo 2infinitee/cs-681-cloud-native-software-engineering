@@ -9,7 +9,7 @@ help:
 
 .PHONY: build-container
 build-container:
-	docker build --tag cs-t681-voter-api:v2 -f ./voterApi/Dockerfile .
+	docker build --tag cs-t681-voter-api:v2 -f ./voterApi/Dockerfile voterApi
 
 .PHONY: runVoterApi
 runVoterApi:

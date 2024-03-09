@@ -23,6 +23,9 @@ help:
 build:
 	go build .
 
+.PHONY: build-container
+build-container:
+	docker build --tag cs-t681-voter-api:v2 -f ./Dockerfile .
 
 .PHONY: build-amd64-linux
 build-amd64-linux:
